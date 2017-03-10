@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+	rwsua2017_libs
+	rwsua2017_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -122,6 +124,11 @@ include_directories(
 #   src/${PROJECT_NAME}/player_fsilva.cpp
 # )
 
+## Declare a C++ library
+#add_library(player_fsilva
+#   src/${PROJECT_NAME}/player_fsilva.cpp
+# )
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -188,3 +195,7 @@ include_directories(
 # catkin_add_nosetests(test)
 
  add_executable(player_fsilva_node src/fsilva_node.cpp)
+## Specify libraries to link a library or executable target against
+ target_link_libraries(player_fsilva_node
+  ${catkin_LIBRARIES}
+ )

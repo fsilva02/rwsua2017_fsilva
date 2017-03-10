@@ -1,81 +1,54 @@
 #include <iostream>
 #include <vector>
 
+#include <rwsua2017_libs/player.h>
+
+//test include rws message
+#include <rwsua2017_msgs/MakeAPlay.h>
+
+//indent your code!
+
 using namespace std;
 
-namespace  player_fsilva {
+namespace rwsua2017
+{
 
-    class Player
+  class MyPlayer: public Player
+  {
+    public:
+
+    MyPlayer(string argin_name, string argin_team_name): Player(argin_name, argin_team_name)
     {
-       public:
-
-        Player(string name, std::string argin_team_name = "green")
-        {
-            //std::cout <<"player name " << argin_name << std::endl;
-            this->name = name;
-            set_team_name(argin_team_name);
-        }
-
-        string name;
-
-        //acessor (set)
-        void set_team_name( string argin_team_name)
-        {
-            if(argin_team_name == "red" || argin_team_name == "blue" || argin_team_name == "green")
-            {
-                this->team_name = argin_team_name;
-            }
-            else
-            {
-                cout << "Error incorrect team name" << endl;
-            }
-        }
-
-        void set_team_name(void)
-        {
-            set_team_name("red");
-        }
-        //acessor (get)
-        string get_team_name(void)
-        {
-            return this->team_name;
-        }
-    private:
-        string team_name;
-
+      cout << "Initialized MyPlayer" << endl;
     };
 
-    class MyPlayer: public Player
-    {
-      public:
+    vector<string> teammates;
 
-        MyPlayer(string name, string argin_team_name): Player(name, argin_team_name)
-        {
-            cout << "Initialized MyPlayer " << endl;
-        }
-
-        vector<string> teammates;
-
-    };
+  };
 }
 
 
 int main()
 {
+  cout << "Hello world" << endl;
 
-    //Creating an instance of class Player
-    player_fsilva::MyPlayer myplayer("Filipe" , "red");
+  rwsua2017::MyPlayer myplayer("player_fsilva", "green");
 
-    cout << "Created an instance of class player with public name " << myplayer.name << endl;
-    cout << "name = " << myplayer.name << endl;
-    cout << "team name = " << myplayer.get_team_name() << endl;
+  cout << "name = " << myplayer.name << endl;
+  cout << "team name = " << myplayer.get_team_name() << endl;
 
-    myplayer.teammates.push_back("fsilva");
-    myplayer.teammates.push_back("vsilva");
+  myplayer.teammates.push_back("vsilva");
 
-    //unsigned long int== size_t
-    for (size_t i = 0; i < myplayer.teammates.size(); ++i)
-    {
-        cout << myplayer.teammates[i] << endl;
-    }
+  //ciclo for tipico em c
+  //int i;
+  //for (i=0; i < 5; i = i + 1)
+
+  cout << "teammates:" << endl;
+  for (size_t i = 0; i < myplayer.teammates.size(); ++i)
+  {
+    cout << myplayer.teammates[i] << endl;
+  }
+
+
+  return 1;
 }
