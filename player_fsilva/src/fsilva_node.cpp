@@ -125,9 +125,9 @@ using namespace rwsua2017;
 int main(int argc, char **argv)
 {
 
-    ros::init(argc,argv,"player_dcorreia");
+    ros::init(argc,argv,"player_fsilva");
 //Creating an instance of class Player
-    MyPlayer player("dcorreia","blue");
+    MyPlayer player("fsilva","blue");
     //player.setTeamName("red");
 
     cout << "player.name is " << player.name << endl;
