@@ -52,11 +52,14 @@ namespace rwsua2017
         return x;
       }
 
-      float getAngleTo(string player_name)
+      float getAngleTo(string player_name, float time_to_wait = 0.1)
       {
         tf::StampedTransform trans;
+        ros::Time now = Time(0);
+
         try{
-          listener.lookupTransform(name, player_name, ros::Time(0), trans);
+            listener.waitForTransform("map", name, now, Duration(time_to_wait));
+            listener.lookupTransform(name, player_name, ros::Time(0), trans);
         }
         catch (tf::TransformException ex){
           ROS_ERROR("%s",ex.what());
@@ -70,11 +73,14 @@ namespace rwsua2017
 
       }
 
-      tf::StampedTransform getPose(void)
+      tf::StampedTransform getPose(float time_to_wait = 0.1)
       {
         tf::StampedTransform transf;
+        ros::Time now = Time(0);
+
         try{
-          listener.lookupTransform("map", name, ros::Time(0), transf);
+            listener.waitForTransform("map", name, now, Duration(time_to_wait));
+            listener.lookupTransform("map", name, ros::Time(0), transf);
         }
         catch (tf::TransformException ex){
           ROS_ERROR("%s",ex.what());
