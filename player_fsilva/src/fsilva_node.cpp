@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <math.h>
 
 //ROS INCLUDES
 #include <ros/ros.h>
@@ -73,6 +74,29 @@ namespace rwsua2017
 
       }
 
+      float getDistanceTo(string player_name, float time_to_wait = 0.1)
+      {
+        tf::StampedTransform trans;
+        ros::Time now = Time(0);
+
+        try{
+            listener.waitForTransform("map", name, now, Duration(time_to_wait));
+            listener.lookupTransform(name, player_name, ros::Time(0), trans);
+        }
+        catch (tf::TransformException ex){
+          ROS_ERROR("%s",ex.what());
+          ros::Duration(0.01).sleep();
+        }
+
+        float x = trans.getOrigin().x();
+        float y = trans.getOrigin().y();
+        float result=sqrt(x*x + y*y);
+        return result;
+
+      }
+
+
+
       tf::StampedTransform getPose(float time_to_wait = 0.1)
       {
         tf::StampedTransform transf;
@@ -95,15 +119,20 @@ namespace rwsua2017
       void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
       {
         float turn_angle = getAngleTo("jsousa");
+
+
+        // obter a distancia minima aos adversários
+        float distance1 = getDistanceTo("jsousa");
+        float distance2 = getDistanceTo("vsilva");
+        float distance3 = getDistanceTo("dcorreia");
+        float distance =  std::min(std::min(distance1, distance2), distance3);
         float displacement = 0.5;
 
-        move(displacement, turn_angle, msg->max_displacement, M_PI/30);
+        move(displacement, turn_angle,distance, msg->max_displacement, M_PI/30);
       }
 
-      void move(float displacement, float turn_angle, float max_displacement,float max_turn_angle)
+      void move(float displacement, float turn_angle,float distance, float max_displacement,float max_turn_angle)
       {
-
-
           if (displacement > max_displacement)
           {
               displacement = max_displacement;
@@ -113,6 +142,10 @@ namespace rwsua2017
           if (turn_angle > max_t) turn_angle = max_t;
           else if (turn_angle < -max_t) turn_angle = -max_t;
 
+          if (distance < 1.5)
+          {
+              turn_angle = -turn_angle;
+          }
           //Compute the new reference frame
           tf::Transform t_mov;
           Quaternion q;
