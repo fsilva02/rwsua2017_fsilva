@@ -91,7 +91,7 @@ public:
         //definicao angulos de rotacao e valores de translacao
         //devia ser calculado pela ai do sys
        // float turn_angle = getAngleToPlayer("vsilva");
-        float displacement = 0.5;
+        float displacement = msg->max_displacement;
         //move my player
 
         //Distancia e angulos dos que me caçam
@@ -166,13 +166,13 @@ public:
             move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
         }
         else
-{
+        {
 
             if(distanceToMap >= 5.5)
             move(displacement,angleToMap,msg->max_displacement,M_PI/30);
             else
             move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
-}
+        }
 
 
 
@@ -279,6 +279,9 @@ public:
         tf::Transform t = getPose()  * t_mov;
         //Send the new transform to ROS
         br.sendTransform(StampedTransform(t, ros::Time::now(), "map", name));
+
+        ROS_INFO_STREAM("Displacement: " << displacement);
+
     }
 
     //Lista de strings com o nome dos outros jogadores da minha equipa
