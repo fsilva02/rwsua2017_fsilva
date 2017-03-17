@@ -1,146 +1,139 @@
-
-
 #include <iostream>
 #include <vector>
-#include <boost/shared_ptr.hpp>
-#include <rwsua2017_libs/player.h>
-#include <rwsua2017_msgs/MakeAPlay.h>
-#include "ros/ros.h"
+
+//ROS INCLUDES
+#include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
-#include "std_msgs/String.h"
-#include <boost/make_shared.hpp>
 
-
-#define MAX_ANGLE M_PI/30
-
-double randNumber(){
-                struct timeval t1;
-                gettimeofday(&t1,NULL);
-                srand(t1.tv_usec);
-                double x =((((double)rand()/(double)RAND_MAX)*2 -1)*5);
-
-                return x;
-}
+//Local includes
+#include <rwsua2017_libs/player.h>
+#include <rwsua2017_msgs/MakeAPlay.h>
 
 
 using namespace std;
+using namespace boost;
+using namespace tf;
+using namespace ros;
 
-namespace rwsua2017{
-        class MyPlayer: public Player{
+namespace rwsua2017
+{
 
-                public:
-                //ros::NodeHandle n;
-                ros::Subscriber sub;
-                tf::TransformBroadcaster br;
+  class MyPlayer: public Player
+  {
+    public:
 
-                tf::Transform t1;
-                tf::TransformListener listener;
+      //PROPPERTIES
+      Subscriber sub;
+      tf::TransformListener listener;
+      TransformBroadcaster br;
 
-                MyPlayer(string name, string team): Player(name, team){
+      MyPlayer(string argin_name, string argin_team_name): Player(argin_name, argin_team_name)
+    {
+      //Subscribe tyo the make_a_play_message
+      sub = n.subscribe("/make_a_play/cat", 1000, &MyPlayer::makeAPlayCallback, this);
+
+      Transform t1;
+      t1.setOrigin( tf::Vector3(randNumber(),randNumber(), 0.0) );
+      Quaternion q;
+      q.setRPY(0, 0, 0);
+      t1.setRotation(q);
+      br.sendTransform(tf::StampedTransform(t1, ros::Time::now(), "map", name));
+
+      cout << "Initialized MyPlayer" << endl;
+    };
+
+      double randNumber(){
+        struct timeval t1;
+        gettimeofday(&t1,NULL);
+        srand(t1.tv_usec);
+        double x =((((double)rand()/(double)RAND_MAX)*2 -1)*5);
+
+        return x;
+      }
+
+      float getAngleTo(string player_name)
+      {
+        tf::StampedTransform trans;
+        try{
+          listener.lookupTransform(name, player_name, ros::Time(0), trans);
+        }
+        catch (tf::TransformException ex){
+          ROS_ERROR("%s",ex.what());
+          ros::Duration(0.01).sleep();
+        }
+
+        float x = trans.getOrigin().x();
+        float y = trans.getOrigin().y();
+
+        return atan2(y,x);
+
+      }
+
+      tf::StampedTransform getPose(void)
+      {
+        tf::StampedTransform transf;
+        try{
+          listener.lookupTransform("map", name, ros::Time(0), transf);
+        }
+        catch (tf::TransformException ex){
+          ROS_ERROR("%s",ex.what());
+          ros::Duration(0.01).sleep();
+        }
+
+        return transf;
+
+      }
 
 
-                        t1.setOrigin(tf::Vector3(randNumber(),randNumber(),0));
-                        tf::Quaternion q;
-                        q.setRPY(0,0,randNumber());
-                        t1.setRotation(q);
-                        br.sendTransform(tf::StampedTransform(t1, ros::Time::now(),"map",name));
+      void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
+      {
+        cout << "received a make a play msg with max_displacement = " << msg->max_displacement << endl;
+        float turn_angle = getAngleTo("dcorreia");
+
+        float displacement = msg->max_displacement;
+
+        double max_t =  (M_PI/30);
+        if (turn_angle > max_t) turn_angle = max_t;
+        else if (turn_angle < -max_t) turn_angle = -max_t;
+
+        //Compute the new reference frame
+        tf::Transform t_mov;
+        Quaternion q;
+        q.setRPY(0, 0, turn_angle);
+        t_mov.setRotation(q);
+        t_mov.setOrigin( Vector3(displacement , 0.0, 0.0) );
+
+        tf::Transform t = getPose()  * t_mov;
+        //Send the new transform to ROS
+        br.sendTransform(StampedTransform(t, ros::Time::now(), "/map", name));
+      }
+
+      vector<string> teammates;
 
 
-                        cout << endl;
 
-                        sub = n.subscribe("/make_a_play/dog",1000, &MyPlayer::makeAPlay,this);
-
-                        cout << "Inicialized MyPlayer" << endl;
-                }
-
-                vector<string> teamMates;
-
-                void printTeamMates(){
-                    for(size_t i = 0; i<teamMates.size(); i++){
-                                                cout << teamMates[i] << endl;
-                    }
-                }
-
-                void makeAPlay(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
-                {
-                  cout << "received a makeAPlay msg" << endl;
-                        cout << "max_dispalcemente: " << msg->max_displacement << endl;
-
-                        float turn_angle = M_PI/10;
-                        float displacement = msg->max_displacement;
-
-                        tf::Transform tmov;
-                        tf::Quaternion q;
-                        double angle = getAngleFromTo(name,"moliveira");
-                        if(angle > MAX_ANGLE){ angle = MAX_ANGLE;}
-                        if(angle < -MAX_ANGLE){ angle = -MAX_ANGLE;}
-                        q.setRPY(0,0,angle);
-
-                        tmov.setRotation(q);
-                        tmov.setOrigin(tf::Vector3(displacement,0,0));
-
-                        tf::Transform t = t1 * tmov;
-
-                        br.sendTransform(tf::StampedTransform(t1, ros::Time::now(),"map",name));
-                        t1 = t;
-                }
-
-double getAngleFromTo(string myPlayer, string player){
-
-        tf::StampedTransform transform;
-
-         try{
-     listener.lookupTransform(myPlayer, player,
-                                                                                                                        ros::Time(0),transform);
-    }
-    catch (tf::TransformException ex){
-      ROS_ERROR("%s",ex.what());
-      //ros::Duration(1.0).sleep();
-    }
-
-                double anglle = atan2(transform.getOrigin().y(),
-                          transform.getOrigin().x());
-
-                return anglle;
+  };
 }
-
-/*
-                bool isMyTeam(vector<string> team, string teamName){
-                                for(int i = 0; i<team.size();i++){
-                                                if(team[i] == name){
-                                                        cout << "My Team is " << teamName << endl;
-                                                        return true;
-                                                }
-                                }
-                                return false;
-                }
-*/
-        };
-}
-
-
-using namespace rwsua2017;
 
 int main(int argc, char **argv)
 {
+  cout << "Hello world" << endl;
 
-    ros::init(argc,argv,"player_fsilva");
-//Creating an instance of class Player
-    MyPlayer player("fsilva","blue");
-    //player.setTeamName("red");
-
-    cout << "player.name is " << player.name << endl;
-    cout << "team is " << player.get_team_name() << endl;
-
-    player.teamMates.push_back("fsilva");
-    player.teamMates.push_back("vsilva");
-
-    player.printTeamMates();
-
-    vector< boost::shared_ptr<Player> > teamMates;
+  ros::init(argc, argv, "fsilva");
 
 
-    ros::spin();
-    return 1;
+  rwsua2017::MyPlayer myplayer("fsilva", "green");
+
+  cout << "name = " << myplayer.name << endl;
+  //cout << "team name = " << myplayer.get_team_name() << endl;
+
+  for (size_t i = 0; i < myplayer.teammates.size(); ++i)
+  {
+    cout << myplayer.teammates[i] << endl;
+  }
+
+  ros::spin();
+
+  return 1;
 }
