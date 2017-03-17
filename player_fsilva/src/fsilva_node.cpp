@@ -92,9 +92,7 @@ namespace rwsua2017
         float y = trans.getOrigin().y();
         float result=sqrt(x*x + y*y);
         return result;
-
       }
-
 
 
       tf::StampedTransform getPose(float time_to_wait = 0.1)
@@ -118,14 +116,28 @@ namespace rwsua2017
 
       void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
       {
-        float turn_angle = getAngleTo("jsousa");
-
+        float turn_angle = getAngleTo("moliveira");
 
         // obter a distancia minima aos adversários
-        float distance1 = getDistanceTo("jsousa");
-        float distance2 = getDistanceTo("vsilva");
-        float distance3 = getDistanceTo("dcorreia");
+        float distance1 = getDistanceTo("moliveira");
+        float distance2 = getDistanceTo("bvieira");
+        float distance3 = getDistanceTo("brocha");
         float distance =  std::min(std::min(distance1, distance2), distance3);
+        if(distance1 <= distance2 && distance1 <= distance3)
+        {
+            float turn_angle = getAngleTo("moliveira");
+            distance  = distance1;
+        }
+        if(distance2 <= distance1 && distance2 <= distance3)
+        {
+            float turn_angle = getAngleTo("bvieira");
+            distance  = distance2;
+        }
+        if(distance3 <= distance2 && distance3 <= distance1)
+        {
+            float turn_angle = getAngleTo("brocha");
+            distance  = distance3;
+        }
         float displacement = 0.5;
 
         move(displacement, turn_angle,distance, msg->max_displacement, M_PI/30);
@@ -138,14 +150,19 @@ namespace rwsua2017
               displacement = max_displacement;
           }
 
-          double max_t =  (M_PI/30);
-          if (turn_angle > max_t) turn_angle = max_t;
-          else if (turn_angle < -max_t) turn_angle = -max_t;
 
           if (distance < 1.5)
           {
               turn_angle = -turn_angle;
           }
+          else
+          {
+              turn_angle= getAngleTo("vsilva");
+          }
+          double max_t =  (M_PI/30);
+          if (turn_angle > max_t) turn_angle = max_t;
+          else if (turn_angle < -max_t) turn_angle = -max_t;
+
           //Compute the new reference frame
           tf::Transform t_mov;
           Quaternion q;
