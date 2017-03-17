@@ -48,7 +48,7 @@ public:
 
         Transform t1; //cria se uma matriz de transformacao t1
 
-        sub = n.subscribe("/make_a_play/cat", 1000, &MyPlayer::makeAPlayCallback,this);
+        sub = n.subscribe("/make_a_play/turtle", 1000, &MyPlayer::makeAPlayCallback,this);
 
         vis_pub = n.advertise<visualization_msgs::Marker>( "/bocas", 0 );
 
@@ -62,7 +62,9 @@ public:
         t1.setRotation(q);
         br.sendTransform(tf::StampedTransform(t1, ros::Time::now(), "map", name)); //transformacao de onde para onde? mapa para o nome do jogador
 
-        cout << "Initalized MyPlayer" <<endl;
+        ROS_INFO_STREAM("Initalized MyPlayer");
+        ROS_WARN("DANGER!!!");
+        ROS_ERROR("U'R DEAD");
     };
 
     tf::StampedTransform getPose(float time_to_wait = 0.1)    {
@@ -84,11 +86,11 @@ public:
 
     void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
     {
-        cout << "received a make a play msg with max displacement = " << msg->max_displacement <<endl;
+       ROS_INFO_STREAM("received a make a play msg with max displacement = "<<msg->max_displacement);
 
         //definicao angulos de rotacao e valores de translacao
         //devia ser calculado pela ai do sys
-        // float turn_angle = getAngleToPlayer("vsilva");
+       // float turn_angle = getAngleToPlayer("vsilva");
         float displacement = 0.5;
         //move my player
 
@@ -115,27 +117,65 @@ public:
 
         float angle_inimigo;
 
-
         if(distanceTovsilva < distanceTojsousa && distanceTovsilva < distanceTodcorreira)
             angle_inimigo = angleTovsilva;
+
         if(distanceTojsousa < distanceTovsilva && distanceTojsousa < distanceTodcorreira)
             angle_inimigo = angleTojsousa;
-        if(distanceTodcorreira < distanceTojsousa && distanceTodcorreira < distanceTovsilva)
-          angle_inimigo = angleTodcorreia;
-/*
-        if(distanceTobvieira < distanceTobrocha && distanceTobvieira < distanceTomoliveira && distanceTobvieira <= 2)
-            move(displacement,-angleTobvieira,msg->max_displacement,M_PI/30);
-        else if(distanceTomoliveira < distanceTobrocha && distanceTomoliveira < distanceTobvieira && distanceTomoliveira <= 2)
-            move(displacement,-angleTomoliveira,msg->max_displacement,M_PI/30);
-        else if(distanceTobrocha < distanceTobvieira && distanceTobrocha < distanceTomoliveira && distanceTobrocha <= 2)
-            move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
-        else
-            move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
-        if(distanceToMap >= 5.5)
-            move(displacement,angleToMap+M_PI/3,msg->max_displacement,M_PI/30);
-*/
 
+        if(distanceTodcorreira < distanceTojsousa && distanceTodcorreira < distanceTovsilva)
+            angle_inimigo = angleTodcorreia;
+
+        if(distanceTobvieira <= 2)
+                {
+        if(distanceTovsilva<distanceTobvieira)
+        move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
+        else if(distanceTodcorreira<distanceTobvieira)
+        move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
+        else if(distanceTojsousa<distanceTobvieira)
+        move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
+        else if(distanceToMap >= 5.5)
         move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
+        else
+            move(displacement,-angleTobvieira,msg->max_displacement,M_PI/30);
+        }
+        else if(distanceTobrocha <= 2)
+        {
+        if(distanceTovsilva<distanceTobrocha)
+        move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
+        else if(distanceTodcorreira<distanceTobrocha)
+        move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
+        else if(distanceTojsousa<distanceTobrocha)
+        move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
+        else if(distanceToMap >= 5.5)
+        move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
+        else
+            move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
+        }
+        else if(distanceTomoliveira <= 2)
+        {
+        if(distanceTovsilva<distanceTomoliveira)
+        move(displacement,angleTovsilva,msg->max_displacement,M_PI/30);
+        else if(distanceTodcorreira<distanceTomoliveira)
+        move(displacement,angleTodcorreia,msg->max_displacement,M_PI/30);
+        else if(distanceTojsousa<distanceTomoliveira)
+        move(displacement,angleTojsousa,msg->max_displacement,M_PI/30);
+        else if(distanceToMap >= 5.5)
+        move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
+        else
+            move(displacement,-angleTobrocha,msg->max_displacement,M_PI/30);
+        }
+        else
+{
+
+            if(distanceToMap >= 5.5)
+            move(displacement,angleToMap,msg->max_displacement,M_PI/30);
+            else
+            move(displacement,angle_inimigo,msg->max_displacement,M_PI/30);
+}
+
+
+
 
         // enviar boca
         visualization_msgs::Marker marker;
@@ -159,7 +199,7 @@ public:
         marker.color.b = 0.3;
         marker.frame_locked = 1;
         marker.lifetime = ros::Duration(1);
-        marker.text = "potatoes";
+        marker.text = "potaoes";
         vis_pub.publish( marker ); //publicar o marcador
 
 
@@ -183,9 +223,6 @@ public:
 
         float x = trans.getOrigin().x();
         float y = trans.getOrigin().y();
-        cout << "delta x: " << x << endl;
-        cout << "delta y: " << y << endl;
-
         return atan2(y,x);
     }
 
