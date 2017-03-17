@@ -94,25 +94,35 @@ namespace rwsua2017
 
       void makeAPlayCallback(const rwsua2017_msgs::MakeAPlay::ConstPtr& msg)
       {
-        cout << "received a make a play msg with max_displacement = " << msg->max_displacement << endl;
-        float turn_angle = getAngleTo("dcorreia");
+        float turn_angle = getAngleTo("jsousa");
+        float displacement = 0.5;
 
-        float displacement = msg->max_displacement;
+        move(displacement, turn_angle, msg->max_displacement, M_PI/30);
+      }
 
-        double max_t =  (M_PI/30);
-        if (turn_angle > max_t) turn_angle = max_t;
-        else if (turn_angle < -max_t) turn_angle = -max_t;
+      void move(float displacement, float turn_angle, float max_displacement,float max_turn_angle)
+      {
 
-        //Compute the new reference frame
-        tf::Transform t_mov;
-        Quaternion q;
-        q.setRPY(0, 0, turn_angle);
-        t_mov.setRotation(q);
-        t_mov.setOrigin( Vector3(displacement , 0.0, 0.0) );
 
-        tf::Transform t = getPose()  * t_mov;
-        //Send the new transform to ROS
-        br.sendTransform(StampedTransform(t, ros::Time::now(), "/map", name));
+          if (displacement > max_displacement)
+          {
+              displacement = max_displacement;
+          }
+
+          double max_t =  (M_PI/30);
+          if (turn_angle > max_t) turn_angle = max_t;
+          else if (turn_angle < -max_t) turn_angle = -max_t;
+
+          //Compute the new reference frame
+          tf::Transform t_mov;
+          Quaternion q;
+          q.setRPY(0, 0, turn_angle);
+          t_mov.setRotation(q);
+          t_mov.setOrigin( Vector3(displacement , 0.0, 0.0) );
+
+          tf::Transform t = getPose()  * t_mov;
+          //Send the new transform to ROS
+          br.sendTransform(StampedTransform(t, ros::Time::now(), "/map", name));
       }
 
       vector<string> teammates;
